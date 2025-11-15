@@ -116,12 +116,7 @@ def main():
     else:
         print("\nДублирующихся email не найдено - все email уникальны!")
 
-    emails_found = sum(1 for profile in profiles if 'email' in profile)
-    print(f"\nСтатистика:")
-    print(f"Всего анкет: {len(profiles)}")
-    print(f"Анкет с email: {emails_found}")
-    print(f"Анкет без email: {len(profiles) - emails_found}")
-
 
 if __name__ == "__main__":
+
     main()
