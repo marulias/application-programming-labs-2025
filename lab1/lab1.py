@@ -1,18 +1,12 @@
-import re
+import re   
+import sys
 from typing import List, Dict, Any, Optional, Set
 
 
-def read_data_file() -> Optional[List[str]]:
+def read_data_file(file_path: str) -> List[str]:
 
-    try:
-        with open('data.txt', 'r', encoding='utf-8') as file:
-            return file.readlines()
-    except FileNotFoundError:
-        print("Ошибка: Файл 'data.txt' не найден в текущей папке")
-        return None
-    except Exception as e:
-        print(f"Ошибка при чтении файла: {e}")
-        return None
+    with open(file_path, 'r', encoding='utf-8') as file:
+        return file.readlines()
 
 
 def extract_email(text: str) -> Optional[str]:
@@ -32,22 +26,18 @@ def parse_profiles(lines: List[str]) -> List[Dict[str, Any]]:
     for line in lines:
         line = line.strip()
 
-        # Пустая строка - разделитель анкет
         if not line:
             if current_profile:
                 profiles.append(current_profile)
                 current_profile = {}
             continue
 
-        # Поиск email в строке
         email = extract_email(line)
         if email:
             current_profile['email'] = email
 
-        # Сохранение всех данных анкеты
         current_profile['raw_data'] = current_profile.get('raw_data', []) + [line]
 
-    # Добавление последней анкеты
     if current_profile:
         profiles.append(current_profile)
 
@@ -59,7 +49,6 @@ def find_duplicate_emails(profiles: List[Dict[str, Any]]) -> List[Dict[str, Any]
     email_count: Dict[str, int] = {}
     duplicate_emails: Set[str] = set()
 
-    # Подсчет email
     for profile in profiles:
         if 'email' in profile:
             email = profile['email']
@@ -67,7 +56,6 @@ def find_duplicate_emails(profiles: List[Dict[str, Any]]) -> List[Dict[str, Any]
             if email_count[email] > 1:
                 duplicate_emails.add(email)
 
-    # Сбор анкет с дублирующимися email
     duplicate_profiles: List[Dict[str, Any]] = []
     for profile in profiles:
         if 'email' in profile and profile['email'] in duplicate_emails:
@@ -83,9 +71,8 @@ def print_results(duplicate_profiles: List[Dict[str, Any]]) -> None:
         return
 
     print("\nНайдены анкеты с дублирующимися email:")
-    print("=" * 50)
 
-    # Группировка по email
+
     email_groups: Dict[str, List[Dict[str, Any]]] = {}
     for profile in duplicate_profiles:
         email = profile['email']
@@ -93,11 +80,10 @@ def print_results(duplicate_profiles: List[Dict[str, Any]]) -> None:
             email_groups[email] = []
         email_groups[email].append(profile)
 
-    # Вывод результатов
     for email, profiles_list in email_groups.items():
         print(f"\nEmail: {email}")
         print(f"Количество дубликатов: {len(profiles_list)}")
-        print("-" * 30)
+
 
         for i, profile in enumerate(profiles_list, 1):
             print(f"Дубликат {i}:")
@@ -107,12 +93,19 @@ def print_results(duplicate_profiles: List[Dict[str, Any]]) -> None:
 
 
 def main() -> None:
-    # Чтение файла
-    lines = read_data_file()
-    if lines is None:
+
+    if len(sys.argv) != 2:
+        print("Использование: python lab1.py <путь_к_файлу>")
+        sys.exit(1)
+
+    file_path = sys.argv[1]
+
+    try:
+        lines = read_data_file(file_path)
+    except Exception as e:
+        print(f"Ошибка: {e}")
         return
 
-    # Парсинг анкет
     profiles = parse_profiles(lines)
 
     if not profiles:
@@ -121,10 +114,8 @@ def main() -> None:
 
     print(f"Всего найдено анкет: {len(profiles)}")
 
-    # Поиск дубликатов
     duplicate_profiles = find_duplicate_emails(profiles)
 
-    # Вывод результатов
     print_results(duplicate_profiles)
 
 
